@@ -204,9 +204,10 @@ def load_data():
     cluster_data = pd.read_csv('cluster_data.csv')
     prophet_forecast = pd.read_csv('prophet_forecast.csv', parse_dates=['ds'])
     segment_forecasts = pd.read_csv('segment_forecasts.csv', parse_dates=['ds'])
-    return df, monthly_sales, anomaly_data, cluster_data, prophet_forecast, segment_forecasts
+    segment_metrics = pd.read_csv('segment_metrics.csv')
+    return df, monthly_sales, anomaly_data, cluster_data, prophet_forecast, segment_forecasts, segment_metrics
 
-df, monthly_sales, anomaly_data, cluster_data, prophet_forecast, segment_forecasts = load_data()
+df, monthly_sales, anomaly_data, cluster_data, prophet_forecast, segment_forecasts, segment_metrics = load_data()
 
 # ---------------------------------------------------------
 # SIDEBAR NAVIGATION
@@ -392,25 +393,26 @@ elif page == "Forecast Explorer":
 
     # --- MAE and RMSE display below the chart ---
     st.write("")
-    section_header("Model Accuracy (Overall Prophet Model)")
+    if segment_type == "Overall":
+        section_header("Model Accuracy (Overall Prophet Model)")
+        mae_val, rmse_val, mape_val = "$11,275.24", "$14,629.52", "16.08%"
+    else:
+        row = segment_metrics[
+            (segment_metrics['segment_type'] == segment_type) &
+            (segment_metrics['segment_value'] == segment_value)
+        ].iloc[0]
+        section_header(f"Model Accuracy ({segment_value})")
+        mae_val, rmse_val, mape_val = f"${row['MAE']:,.2f}", f"${row['RMSE']:,.2f}", f"{row['MAPE']:.2f}%"
+
     m1, m2, m3 = st.columns(3)
     with m1:
-        kpi_card("Model MAE", "$11,275.24")
+        kpi_card("Model MAE", mae_val)
     with m2:
-        kpi_card("Model RMSE", "$14,629.52")
+        kpi_card("Model RMSE", rmse_val)
     with m3:
-        kpi_card("Model MAPE", "16.08%")
+        kpi_card("Model MAPE", mape_val)
 
-    if segment_type == "Overall":
-        st.caption("Metrics from the overall Prophet model, evaluated on a held-out 10-month test set (Task 3).")
-    else:
-        st.caption(
-            f"⚠️ These accuracy metrics are from the **overall** Prophet model (Task 3), not re-evaluated "
-            f"specifically for {segment_value}. Segment-level forecasts (Task 4) were generated using the "
-            f"same tuned Prophet settings, but a separate train/test evaluation was not performed per segment. "
-            f"Treat segment forecast confidence intervals (shown on the chart) as the more reliable uncertainty "
-            f"indicator for {segment_value} specifically."
-        )
+    st.caption(f"Metrics from a Prophet model trained and evaluated specifically on {segment_value}'s historical data (80/20 time-ordered train/test split), consistent with the methodology used for the overall model in Task 3.")
 
 # ===========================================================
 # PAGE 3 — ANOMALY REPORT
