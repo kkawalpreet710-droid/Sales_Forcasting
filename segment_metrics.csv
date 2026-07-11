@@ -1,0 +1,6 @@
+segment_type,segment_value,MAE,RMSE,MAPE
+Category,Furniture,3529.3,4302.95,19.43
+Category,Technology,7216.64,9117.35,28.6
+Category,Office Supplies,4142.38,5473.55,18.24
+Region,West,4663.79,5676.64,19.95
+Region,East,7753.23,8949.32,50.28
