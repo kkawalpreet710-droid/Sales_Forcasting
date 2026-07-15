@@ -335,9 +335,11 @@ elif page == "Forecast Explorer":
 
     with col2:
         if segment_type == "Category":
-            segment_value = st.selectbox("Select Category:", df['Category'].unique())
+            available_categories = sorted(segment_forecasts[segment_forecasts['segment_type'] == 'Category']['segment_value'].unique())
+            segment_value = st.selectbox("Select Category:", available_categories)
         elif segment_type == "Region":
-            segment_value = st.selectbox("Select Region:", df['Region'].unique())
+            available_regions = sorted(segment_forecasts[segment_forecasts['segment_type'] == 'Region']['segment_value'].unique())
+            segment_value = st.selectbox("Select Region:", available_regions)
         else:
             segment_value = "Overall"
 
@@ -397,10 +399,14 @@ elif page == "Forecast Explorer":
         section_header("Model Accuracy (Overall Prophet Model)")
         mae_val, rmse_val, mape_val = "$11,275.24", "$14,629.52", "16.08%"
     else:
-        row = segment_metrics[
+        matched = segment_metrics[
             (segment_metrics['segment_type'] == segment_type) &
             (segment_metrics['segment_value'] == segment_value)
-        ].iloc[0]
+        ]
+        if matched.empty:
+            st.warning(f"No forecast model was trained for {segment_value}. Please select a different {segment_type.lower()}.")
+            st.stop()
+        row = matched.iloc[0]
         section_header(f"Model Accuracy ({segment_value})")
         mae_val, rmse_val, mape_val = f"${row['MAE']:,.2f}", f"${row['RMSE']:,.2f}", f"{row['MAPE']:.2f}%"
 
